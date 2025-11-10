@@ -3,6 +3,29 @@ name: Salesforce JIRA Integration
 on:
   repository_dispatch:
     types: [jira-status-deployment-needed]
+  workflow_dispatch:
+    inputs:
+      jira_ticket_key:
+        description: 'Jira ticket key'
+        required: true
+        type: string
+      jira_status:
+        description: 'Jira status'
+        required: true
+        type: string
+      salesforce_components:
+        description: 'Salesforce components to deploy'
+        required: true
+        type: string
+      component_types:
+        description: 'Component types'
+        required: true
+        type: string
+      sandbox_org:
+        description: 'Target Salesforce sandbox'
+        required: true
+        type: string
+        default: 'dev'
 
 env:
   SALESFORCE_CLI_VERSION: latest
