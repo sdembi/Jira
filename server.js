@@ -7,7 +7,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = "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";
 const GITHUB_REPO = "sdembi/Jira";
 
 app.post("/webhook/jira", async (req, res) => {
