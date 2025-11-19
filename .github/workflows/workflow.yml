@@ -1,12 +1,25 @@
+
 name: Hello World Python
 
 on:
-  workflow_dispatch:
+  repository_dispatch:
+    types: [jira-status-deployment-needed]
 
 jobs:
   hello-world-python:
     runs-on: ubuntu-latest
     steps:
+      - name: Extract Story Name
+        id: extract-story
+        run: |
+          echo "STORY_NAME=${{ github.event.client_payload.jira_ticket_key }}" >> $GITHUB_ENV
+      - name: Create Branch
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git fetch origin
+          git checkout -b ${{ env.STORY_NAME }}
+          git push origin ${{ env.STORY_NAME }}
       - name: Create hello.py
         run: echo "print('Hello World')" > hello.py
       - name: Run hello.py
