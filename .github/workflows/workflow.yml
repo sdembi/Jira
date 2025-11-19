@@ -1,24 +1,16 @@
-name: Salesforce JIRA Integration
+name: Hello World Python
 
 on:
-  repository_dispatch:
-    types: [jira-status-deployment-needed]
-
-env:
-  SALESFORCE_CLI_VERSION: latest
-  NODE_VERSION: '18'
+  workflow_dispatch:
 
 jobs:
-  salesforce-integration:
+  hello-world-python:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: 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
-    steps:    
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ env.GITHUB_TOKEN }}
+    steps:
+      - name: Create hello.py
+        run: echo "print('Hello World')" > hello.py
+      - name: Run hello.py
+        run: python3 hello.py
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
