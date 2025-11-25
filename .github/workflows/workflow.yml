@@ -28,4 +28,19 @@ jobs:
     - name: Install Salesforce CLI
       run: |
         npm install -g @salesforce/cli@${{ env.SALESFORCE_CLI_VERSION }}
-        sf version 
+        sf version      
+    - name: Extract JIRA Inputs
+      id: extract-inputs
+      run: |
+        echo "jira_ticket_key=${{ github.event.client_payload.jira_ticket_key }}" >> $GITHUB_OUTPUT
+        echo "salesforce_components=${{ github.event.client_payload.salesforce_components }}" >> $GITHUB_OUTPUT
+        echo "component_types=${{ github.event.client_payload.component_types }}" >> $GITHUB_OUTPUT
+        echo "sandbox_org=${{ github.event.client_payload.sandbox_org }}" >> $GITHUB_OUTPUT
+        echo "jira_status=${{ github.event.client_payload.jira_status }}" >> $GITHUB_OUTPUT
+        
+        echo "Received from JIRA:"
+        echo "- Ticket: ${{ github.event.client_payload.jira_ticket_key }}"
+        echo "- Status: ${{ github.event.client_payload.jira_status }}"
+        echo "- Components: ${{ github.event.client_payload.salesforce_components }}"
+        echo "- Types: ${{ github.event.client_payload.component_types }}"
+        echo "- Sandbox: ${{ github.event.client_payload.sandbox_org }}"
