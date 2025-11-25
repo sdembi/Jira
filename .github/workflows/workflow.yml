@@ -1,4 +1,4 @@
-name: Salesforce JIRA Integration
+name: Salesforce JIRA Integration 2
 
 on:
   repository_dispatch:
