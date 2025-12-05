@@ -30,14 +30,3 @@ jobs:
         npm install -g @salesforce/cli@${{ env.SALESFORCE_CLI_VERSION }}
         sf version      
         echo "hello"
-        
-    - name: Authenticate to Salesforce
-      run: |
-        echo "${{ secrets.SALESFORCE_JWT_KEY }}" > server.key        
-        sf org login jwt \
-          --client-id ${{ secrets.SALESFORCE_CLIENT_ID }} \
-          --jwt-key-file server.key \
-          --username ${{ secrets.SALESFORCE_USERNAME }} \
-          --instance-url ${{ secrets.SALESFORCE_INSTANCE_URL }} \
-          --alias ${{ steps.extract-inputs.outputs.sandbox_org }}
-        rm server.key
