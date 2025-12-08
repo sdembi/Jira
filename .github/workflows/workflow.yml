@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "${{ secrets.SALESFORCE_JWT_KEY }}" > jwt.key
           chmod 600 jwt.key
-
+#auth
       - name: Authenticate to Salesforce Org
         run: |
-          sfdx force:auth:jwt:grant --username ${{ env.SALESFORCE_USERNAME }} --jwtkeyfile ./jwt.key --clientid ${{ env.SALESFORCE_CLIENT_ID }} --instanceurl ${{ env.SALESFORCE_INSTANCE_URL }} --setdefaultusername
+          sfdx force:auth:jwt:grant --username ${{ env.SALESFORCE_USERNAME }} --jwt-key-file ./jwt.key --clientid ${{ env.SALESFORCE_CLIENT_ID }} --instanceurl ${{ env.SALESFORCE_INSTANCE_URL }} --setdefaultusername
