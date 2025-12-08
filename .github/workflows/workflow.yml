@@ -72,3 +72,11 @@ jobs:
             exit 0
           fi
           echo "Status confirmed as 'deployment needed' - proceeding with deployment"
+        
+      - name: Validate Branch Name
+        id: validate-branch
+        run: |
+          BRANCH_NAME="${{ steps.extract-inputs.outputs.jira_ticket_key }}"
+          SANITIZED_BRANCH=$(echo "$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+          echo "branch_name=feature/$SANITIZED_BRANCH" >> $GITHUB_OUTPUT
+          echo "Branch name will be: feature/$SANITIZED_BRANCH"
