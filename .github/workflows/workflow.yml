@@ -95,3 +95,96 @@ jobs:
             echo "Creating new branch: ${{ steps.validate-branch.outputs.branch_name }}"
             git checkout -b ${{ steps.validate-branch.outputs.branch_name }}
           fi
+      
+      - name: Generate Package XML
+        id: generate-package
+        run: |
+          mkdir -p force-app/main/default
+          
+          # Parse components and types
+          COMPONENTS="${{ steps.extract-inputs.outputs.salesforce_components }}"
+          TYPES="${{ steps.extract-inputs.outputs.component_types }}"
+          
+          cat > package.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+          EOF
+          
+          # Convert comma-separated strings to arrays
+          IFS=',' read -ra COMP_ARRAY <<< "$COMPONENTS"
+          IFS=',' read -ra TYPE_ARRAY <<< "$TYPES"
+          
+          # Validate arrays have same length
+          if [ ${#COMP_ARRAY[@]} -ne ${#TYPE_ARRAY[@]} ]; then
+            echo "Error: Number of components (${#COMP_ARRAY[@]}) does not match number of types (${#TYPE_ARRAY[@]})"
+            exit 1
+          fi
+          
+          # Group components by metadata type
+          declare -A TYPE_MAP
+          
+          for i in "${!COMP_ARRAY[@]}"; do
+            comp=$(echo "${COMP_ARRAY[$i]}" | xargs)  # trim whitespace
+            type=$(echo "${TYPE_ARRAY[$i]}" | xargs)  # trim whitespace
+            
+            # Normalize metadata type names
+            case "$type" in
+              "Apex Class"|"ApexClass"|"Class")
+                type="ApexClass"
+                ;;
+              "Apex Trigger"|"ApexTrigger"|"Trigger")
+                type="ApexTrigger"
+                ;;
+              "Custom Object"|"CustomObject"|"Object")
+                type="CustomObject"
+                ;;
+              "Visualforce Page"|"ApexPage"|"Page")
+                type="ApexPage"
+                ;;
+              "Visualforce Component"|"ApexComponent"|"Component")
+                type="ApexComponent"
+                ;;
+              "Flow"|"Process")
+                type="Flow"
+                ;;
+              "Layout"|"Page Layout")
+                type="Layout"
+                ;;
+              "Permission Set"|"PermissionSet")
+                type="PermissionSet"
+                ;;
+              "Custom Field"|"CustomField"|"Field")
+                type="CustomField"
+                ;;
+              "Lightning Web Component"|"LightningComponentBundle"|"LWC")
+                type="LightningComponentBundle"
+                ;;
+              *)
+                echo "Warning: Unknown type '$type' for component '$comp', defaulting to ApexClass"
+                type="ApexClass"
+                ;;
+            esac
+            
+            TYPE_MAP["$type"]+="$comp,"
+          done
+          
+          # Generate XML for each metadata type
+          for type in "${!TYPE_MAP[@]}"; do
+            echo "    <types>" >> package.xml
+            IFS=',' read -ra MEMBERS <<< "${TYPE_MAP[$type]}"
+            for member in "${MEMBERS[@]}"; do
+              if [[ -n "$member" ]]; then
+                echo "        <members>$member</members>" >> package.xml
+              fi
+            done
+            echo "        <name>$type</name>" >> package.xml
+            echo "    </types>" >> package.xml
+          done
+          
+          cat >> package.xml << 'EOF'
+              <version>59.0</version>
+          </Package>
+          EOF
+          
+          echo "Generated package.xml with ${#COMP_ARRAY[@]} components:"
+          cat package.xml
