@@ -80,3 +80,18 @@ jobs:
           SANITIZED_BRANCH=$(echo "$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
           echo "branch_name=feature/$SANITIZED_BRANCH" >> $GITHUB_OUTPUT
           echo "Branch name will be: feature/$SANITIZED_BRANCH"
+      
+      - name: Create Feature Branch
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Check if branch exists
+          if git ls-remote --heads origin ${{ steps.validate-branch.outputs.branch_name }} | grep -q ${{ steps.validate-branch.outputs.branch_name }}; then
+            echo "Branch ${{ steps.validate-branch.outputs.branch_name }} already exists, switching to it"
+            git checkout ${{ steps.validate-branch.outputs.branch_name }}
+            git pull origin ${{ steps.validate-branch.outputs.branch_name }}
+          else
+            echo "Creating new branch: ${{ steps.validate-branch.outputs.branch_name }}"
+            git checkout -b ${{ steps.validate-branch.outputs.branch_name }}
+          fi
