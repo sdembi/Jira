@@ -62,3 +62,13 @@ jobs:
           echo "- Components: ${{ github.event.client_payload.salesforce_components }}"
           echo "- Types: ${{ github.event.client_payload.component_types }}"
           echo "- Sandbox: ${{ github.event.client_payload.sandbox_org }}"
+
+      - name: Check Deployment Status
+        run: |
+          if [ "${{ steps.extract-inputs.outputs.jira_status }}" != "deployment needed" ]; then
+            echo "Workflow triggered but status is not 'deployment needed'"
+            echo "Current status: ${{ steps.extract-inputs.outputs.jira_status }}"
+            echo "Exiting workflow..."
+            exit 0
+          fi
+          echo "Status confirmed as 'deployment needed' - proceeding with deployment"
