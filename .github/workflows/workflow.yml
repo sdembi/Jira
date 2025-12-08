@@ -29,13 +29,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      # - name: Install the SFDX CLI
-      #   run: |
-      #     npm install sfdx-cli --global
-      - name: Install Salesforce CLI (sf)
+      - name: Install the SFDX CLI
         run: |
-          npm install --global @salesforce/cli
-
+          npm install sfdx-cli --global
 
       - name: Setup JWT Key
         run: |
@@ -192,15 +188,3 @@ jobs:
           
           echo "Generated package.xml with ${#COMP_ARRAY[@]} components:"
           cat package.xml
-
-      - name: Retrieve Salesforce Components
-        run: |
-          echo "Retrieving components from ${{ steps.extract-inputs.outputs.sandbox_org }}..."
-
-          sf project retrieve start \
-            --manifest package.xml \
-            --target-org ${{ steps.extract-inputs.outputs.sandbox_org }} \
-            --wait 10
-
-          echo "Retrieved components:"
-          find force-app -name "*.cls" -o -name "*.trigger" -o -name "*.page" -o -name "*.component" | head -20
