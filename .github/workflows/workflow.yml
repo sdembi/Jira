@@ -32,10 +32,10 @@ jobs:
       # - name: Install the SFDX CLI
       #   run: |
       #     npm install sfdx-cli --global
-      - name: Setup Salesforce CLI
-        uses: salesforcecli/sfdx-actions/setup@v2
-        with:
-          cli: sf
+      - name: Install Salesforce CLI (sf)
+        run: |
+          npm install --global @salesforce/cli
+
 
       - name: Setup JWT Key
         run: |
