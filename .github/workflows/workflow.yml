@@ -196,6 +196,13 @@ jobs:
           echo "Generated package.xml with ${#COMP_ARRAY[@]} components:"
           cat package.xml
 
+      - name: Confirm SFDX project file
+        run: |
+          if [ ! -f sfdx-project.json ]; then
+            echo "ERROR: sfdx-project.json not found in workspace root."
+            exit 1
+          fi
+
       - name: Retrieve Salesforce Components
         run: |
           echo "Retrieving components from default username: ${{ env.SALESFORCE_USERNAME }}"
