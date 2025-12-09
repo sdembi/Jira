@@ -25,8 +25,8 @@ app.post("/webhook/jira", async (req, res) => {
           `Status changed from ${change.fromString} to ${change.toString}`
         );
 
-        // When status changes to "In Progress"
-        if (change.toString === "In Progress") {
+        // When status changes to "Deployment Needed"
+        if (change.toString === "Deployment Needed") {
           console.log(
             `Triggering Salesforce deployment workflow for ${issueKey}`
           );
@@ -189,7 +189,7 @@ async function triggerSalesforceWorkflow(issueKey, payload) {
           ref: "main",
           inputs: {
             jira_ticket_key: payload.jira_ticket_key || issueKey,
-            jira_status: payload.jira_status || "In Progress",
+            jira_status: payload.jira_status || "Deployment Needed",
             salesforce_components: payload.salesforce_components || "none",
             component_types: payload.component_types || "none",
             sandbox_org: payload.sandbox_org || "dev",
