@@ -196,16 +196,21 @@ jobs:
           echo "Generated package.xml with ${#COMP_ARRAY[@]} components:"
           cat package.xml
 
-      - name: Confirm SFDX project file
+      - name: Commit Changes
+        id: commit-changes
         run: |
-          if [ ! -f sfdx-project.json ]; then
-            echo "ERROR: sfdx-project.json not found in workspace root."
-            exit 1
-          fi
+          git add .
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT        else
+            git commit -m "feat: Retrieved Salesforce components for ${{ steps.extract-inputs.outputs.jira_ticket_key }}
 
-      - name: Retrieve Salesforce Components
-        run: |
-          echo "Retrieving components from default username: ${{ env.SALESFORCE_USERNAME }}"
-          sfdx force:source:retrieve --manifest package.xml --wait 10
-          echo "Retrieved components:"
-          find force-app -name "*.cls" -o -name "*.trigger" -o -name "*.page" -o -name "*.component" | head -20
+            Components: ${{ steps.extract-inputs.outputs.salesforce_components }}
+            Types: ${{ steps.extract-inputs.outputs.component_types }}
+            Source Org: ${{ steps.extract-inputs.outputs.sandbox_org }}
+            
+            JIRA: ${{ steps.extract-inputs.outputs.jira_ticket_key }}"
+            
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
