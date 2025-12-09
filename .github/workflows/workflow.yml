@@ -103,6 +103,32 @@ jobs:
             git checkout -b ${{ steps.validate-branch.outputs.branch_name }}
           fi
       
+      - name: Initialize SFDX Project
+        run: |
+          # Create sfdx-project.json if it doesn't exist
+          if [ ! -f "sfdx-project.json" ]; then
+            cat> sfdx-project.json << 'EOF'
+          {
+            "packageDirectories": [
+              {
+                "path": "force-app",
+                "default": true
+              }
+            ],
+            "name": "salesforce-jira-integration",
+            "namespace": "",
+            "sfdcLoginUrl": "https://login.salesforce.com",
+            "sourceApiVersion": "59.0"
+          }
+          EOF
+            echo "Created sfdx-project.json"
+          else
+            echo "sfdx-project.json already exists"
+          fi
+          
+          # Ensure force-app directory exists
+          mkdir -p force-app/main/default
+
       - name: Generate Package XML
         id: generate-package
         run: |
