@@ -1,4 +1,4 @@
-name: Salesforce JIRA Integration 2
+name: Salesforce JIRA Integration
 
 on:
   repository_dispatch:
@@ -198,10 +198,7 @@ jobs:
 
       - name: Retrieve Salesforce Components
         run: |
-          echo "Retrieving components from ${{ steps.extract-inputs.outputs.sandbox_org }}..."
-          sfdx force:source:retrieve \
-            --manifest package.xml \
-            --targetusername ${{ steps.extract-inputs.outputs.sandbox_org }} \
-            --wait 10
+          echo "Retrieving components from default username: ${{ env.SALESFORCE_USERNAME }}"
+          sfdx force:source:retrieve --manifest package.xml --wait 10
           echo "Retrieved components:"
           find force-app -name "*.cls" -o -name "*.trigger" -o -name "*.page" -o -name "*.component" | head -20
