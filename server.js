@@ -32,9 +32,10 @@ app.post("/webhook/jira", async (req, res) => {
           );
 
           // Extract Salesforce components and types from custom fields
+          console.log(issue)
           const salesforceComponents =
-            issue.fields.customfield_salesforceComponents || "";
-          const componentTypes = issue.fields.customfield_componentTypes || "";
+            issue.fields.customfield_10058 || "";
+          const componentTypes = issue.fields.customfield_10059 || "";
           const sandboxOrg = issue.fields.customfield_sandboxOrg || "dev";
 
           // // First create the branch
@@ -56,95 +57,6 @@ app.post("/webhook/jira", async (req, res) => {
   }
   res.status(200).send("Received");
 });
-
-// // Directly create branch using GitHub API
-// async function createBranch(branchName) {
-//   try {
-//     // Get default branch info
-//     const repoUrl = `https://api.github.com/repos/${GITHUB_REPO}`;
-//     const headers = { 
-//       'Authorization': `token ${GITHUB_TOKEN}`,
-//       'Accept': 'application/vnd.github.v3+json',
-//       'Content-Type': 'application/json'
-//     };
-
-//     console.log(`Fetching repository information from ${repoUrl}`);
-    
-//     // Get default branch SHA
-//     const repoRes = await axios.get(repoUrl, { headers });
-//     const defaultBranch = repoRes.data.default_branch;
-//     console.log(`Default branch is: ${defaultBranch}`);
-
-//     // Get the SHA of the default branch using the correct endpoint
-//     const refRes = await axios.get(`${repoUrl}/git/refs/heads/${defaultBranch}`, {
-//       headers,
-//     });
-    
-//     if (!refRes.data || !refRes.data.object || !refRes.data.object.sha) {
-//       throw new Error(`Failed to get SHA for ${defaultBranch}. Response: ${JSON.stringify(refRes.data)}`);
-//     }
-    
-//     const sha = refRes.data.object.sha;
-//     console.log(`Got SHA: ${sha} from default branch ${defaultBranch}`);
-
-//     // Check if branch already exists
-//     try {
-//       const branchCheck = await axios.get(`${repoUrl}/git/refs/heads/${branchName}`, { 
-//         headers,
-//         validateStatus: function (status) {
-//           return status === 404 || status === 200; // Accept 404 as valid response
-//         }
-//       });
-      
-//       if (branchCheck.status === 200) {
-//         console.log(`Branch ${branchName} already exists, skipping creation`);
-//         return;
-//       }
-//     } catch (error) {
-//       // If it's not a 404, something else went wrong
-//       if (error.response?.status !== 404) {
-//         throw error;
-//       }
-//     }
-
-//     // Create new branch
-//     console.log(`Creating new branch: ${branchName} from SHA: ${sha}`);
-//     const createResponse = await axios.post(
-//       `${repoUrl}/git/refs`,
-//       {
-//         ref: `refs/heads/${branchName}`,
-//         sha: sha
-//       },
-//       { 
-//         headers,
-//         validateStatus: function (status) {
-//           return status >= 200 && status < 300 || status === 422;
-//         }
-//       }
-//     );
-
-//     if (createResponse.status === 422) {
-//       console.error('Branch creation failed. Response:', {
-//         status: createResponse.status,
-//         data: createResponse.data
-//       });
-//       throw new Error(`Failed to create branch: ${JSON.stringify(createResponse.data)}`);
-//     }
-
-//     console.log(`Successfully created branch: ${branchName}`);
-//     return createResponse;
-//   } catch (error) {
-//     console.error('Error in createBranch:', {
-//       message: error.message,
-//       status: error.response?.status,
-//       statusText: error.response?.statusText,
-//       data: error.response?.data,
-//       url: error.config?.url,
-//       method: error.config?.method
-//     });
-//     throw error;
-//   }
-// }
 
 // Function to trigger the Salesforce deployment workflow
 async function triggerSalesforceWorkflow(issueKey, payload) {
@@ -228,3 +140,4 @@ async function triggerGithubWorkflow(issueKey, branchName) {
 }
 
 app.listen(3000, () => console.log("Server running on 3000"));
+
