@@ -4,6 +4,10 @@ on:
   repository_dispatch:
     types: [jira-status-deployment-needed]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 env:
   SALESFORCE_CLI_VERSION: latest
   NODE_VERSION: '18'
@@ -60,7 +64,6 @@ jobs:
           echo "jira_ticket_key=${{ github.event.client_payload.jira_ticket_key }}" >> $GITHUB_OUTPUT
           echo "salesforce_components=${{ github.event.client_payload.salesforce_components }}" >> $GITHUB_OUTPUT
           echo "component_types=${{ github.event.client_payload.component_types }}" >> $GITHUB_OUTPUT
-          # echo "sandbox_org=${{ github.event.client_payload.sandbox_org }}" >> $GITHUB_OUTPUT
           echo "jira_status=${{ github.event.client_payload.jira_status }}" >> $GITHUB_OUTPUT
 
           echo "Received from JIRA:"
@@ -68,7 +71,6 @@ jobs:
           echo "- Status: ${{ github.event.client_payload.jira_status }}"
           echo "- Components: ${{ github.event.client_payload.salesforce_components }}"
           echo "- Types: ${{ github.event.client_payload.component_types }}"
-          # echo "- Sandbox: ${{ github.event.client_payload.sandbox_org }}"
 
       - name: Check Deployment Status
         run: |
@@ -102,6 +104,10 @@ jobs:
             echo "Creating new branch: ${{ steps.validate-branch.outputs.branch_name }}"
             git checkout -b ${{ steps.validate-branch.outputs.branch_name }}
           fi
+          
+          # Verify branch creation
+          echo "Current branch: $(git branch --show-current)"
+          git branch -a
       
       - name: Initialize SFDX Project
         run: |
@@ -163,9 +169,6 @@ jobs:
           EOF
 
           echo "Initialized SFDX project folder and created dummy metadata."
-
-
-
 
       - name: Generate Package XML
         id: generate-package
@@ -278,22 +281,37 @@ jobs:
           
           if git diff --staged --quiet; then
             echo "No changes to commit"
-            echo "has_changes=false" >> $GITHUB_OUTPUT        else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
             git commit -m "feat: Retrieved Salesforce components for ${{ steps.extract-inputs.outputs.jira_ticket_key }}
-
-            Components: ${{ steps.extract-inputs.outputs.salesforce_components }}
-            Types: ${{ steps.extract-inputs.outputs.component_types }}
-            Source Org: ${{ steps.extract-inputs.outputs.sandbox_org }}
-            
-            JIRA: ${{ steps.extract-inputs.outputs.jira_ticket_key }}"
+          
+          Components: ${{ steps.extract-inputs.outputs.salesforce_components }}
+          Types: ${{ steps.extract-inputs.outputs.component_types }}
+          
+          JIRA: ${{ steps.extract-inputs.outputs.jira_ticket_key }}"
             
             echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Debug Commit Status
+        run: |
+          echo "Has changes: ${{ steps.commit-changes.outputs.has_changes }}"
+          echo "Current branch: $(git branch --show-current)"
+          git status
+          if [ "${{ steps.commit-changes.outputs.has_changes }}" == "true" ]; then
+            git log -1 --oneline
           fi
 
       - name: Push Feature Branch
         if: steps.commit-changes.outputs.has_changes == 'true'
         run: |
-          git push origin ${{ steps.validate-branch.outputs.branch_name }}
+          echo "Pushing branch: ${{ steps.validate-branch.outputs.branch_name }}"
+          git push origin ${{ steps.validate-branch.outputs.branch_name }} || {
+            echo "Push failed with exit code $?"
+            git status
+            git remote -v
+            exit 1
+          }
       
       - name: Create Pull Request
         if: steps.commit-changes.outputs.has_changes == 'true'
@@ -303,14 +321,13 @@ jobs:
           # Check if PR already exists
           if gh pr list --head ${{ steps.validate-branch.outputs.branch_name }} --json number --jq length | grep -q "0"; then
             gh pr create \
-              --title "[${{ steps.extract-inputs.outputs.jira_ticket_key }}] Salesforce Components Update" \            
+              --title "[${{ steps.extract-inputs.outputs.jira_ticket_key }}] Salesforce Components Update" \
               --body "## JIRA Ticket
           **Ticket:** [${{ steps.extract-inputs.outputs.jira_ticket_key }}](https://your-jira-instance.atlassian.net/browse/${{ steps.extract-inputs.outputs.jira_ticket_key }})
           
           ## Changes
           - Retrieved Salesforce components: \`${{ steps.extract-inputs.outputs.salesforce_components }}\`
           - Component types: \`${{ steps.extract-inputs.outputs.component_types }}\`
-          - Source Sandbox: \`${{ steps.extract-inputs.outputs.sandbox_org }}\`
           
           ## Components Updated
           $(find force-app -name "*.cls" -o -name "*.trigger" -o -name "*.page" -o -name "*.component" | sed 's/^/- /')
@@ -334,8 +351,8 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          if [ -f "server.key" ]; then
-            rm -f server.key
+          if [ -f "jwt.key" ]; then
+            rm -f jwt.key
           fi
           if [ -f "package.xml" ]; then
             rm -f package.xml
