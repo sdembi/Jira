@@ -8,7 +8,7 @@ const app = express();
 
 app.use(bodyParser.json());
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const PAT_TOKEN = process.env.PAT_TOKEN;
 const GITHUB_REPO = "sdembi/Jira";
 
 app.post("/webhook/jira", async (req, res) => {
@@ -61,7 +61,7 @@ app.post("/webhook/jira", async (req, res) => {
 // Function to trigger the Salesforce deployment workflow
 async function triggerSalesforceWorkflow(issueKey, payload) {
   const headers = {
-    Authorization: `token ${GITHUB_TOKEN}`,
+    Authorization: `token ${PAT_TOKEN}`,
     Accept: "application/vnd.github.v3+json",
   };
 
@@ -131,7 +131,7 @@ async function triggerSalesforceWorkflow(issueKey, payload) {
 // Optionally, trigger a GitHub Actions workflow (via workflow_dispatch)
 async function triggerGithubWorkflow(issueKey, branchName) {
   const workflowUrl = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/create-branch.yml/dispatches`;
-  const headers = { Authorization: `token ${GITHUB_TOKEN}` };
+  const headers = { Authorization: `token ${PAT_TOKEN}` };
   const data = {
     ref: "main", // Or default branch
     inputs: { issue_key: issueKey, branch_name: branchName },
