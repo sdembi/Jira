@@ -31,7 +31,6 @@ app.post("/webhook/jira", async (req, res) => {
           );
 
           // Extract Salesforce components and types from custom fields
-          console.log(issue)
           const salesforceComponents =
             issue.fields.customfield_10058 || "";
           const componentTypes = issue.fields.customfield_10059 || "";
@@ -86,31 +85,6 @@ async function triggerSalesforceWorkflow(issueKey, payload) {
 
     console.log(`Successfully sent repository_dispatch event for ${issueKey}`);
 
-    // Also try direct workflow trigger as backup
-    try {
-      const workflowUrl = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/workflow.yml/dispatches`;
-      await axios.post(
-        workflowUrl,
-        {
-          ref: "main",
-          inputs: {
-            jira_ticket_key: payload.jira_ticket_key || issueKey,
-            jira_status: payload.jira_status || "deployment needed",
-            salesforce_components: payload.salesforce_components || "none",
-            component_types: payload.component_types || "none",
-            sandbox_org: payload.sandbox_org || "dev",
-          },
-        },
-        { headers }
-      );
-      console.log(`Also triggered workflow file directly for ${issueKey}`);
-    } catch (workflowError) {
-      console.log(
-        "Direct workflow trigger failed (backup method):",
-        workflowError.response?.data || workflowError.message
-      );
-      // Don't throw error for backup method
-    }
   } catch (error) {
     console.error("Error triggering workflow:", {
       status: error.response?.status,
